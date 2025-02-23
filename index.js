@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
 document.addEventListener('DOMContentLoaded', function() {
+
  const showDetailsToggle = document.getElementById('showDetailsToggle');
   const showNamesToggle = document.getElementById('showNamesToggle');
 
@@ -507,9 +507,6 @@ function updateChart() {
   if (currentChart) currentChart.destroy();
 
   const canvas = document.getElementById('myChart');
-  // Set explicit size to ensure visibility
-  canvas.width = 800;  // Adjust as needed
-  canvas.height = 400; // Adjust as needed
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -538,7 +535,6 @@ function updateChart() {
     data: { datasets },
     options: {
       responsive: true,
-      maintainAspectRatio: false, // Allow explicit sizing
       animation: { duration: 0 },
       plugins: {
         legend: {
@@ -571,15 +567,11 @@ function updateChart() {
       showNames: showNamesToggle ? showNamesToggle.checked : false,
       plugins: [{
         id: 'customNames',
-        afterDraw: function(chart) { // Changed to afterDraw
+        afterDatasetsDraw: function(chart) {
           const ctx = chart.ctx;
-          console.log('After draw - showDetails:', chart.options.showDetails, 'showNames:', chart.options.showNames);
-
-          ctx.save(); // Ensure clean state
-          ctx.textBaseline = 'bottom'; // Align text properly
-
-          // Draw "Details" names on all points
+          console.log('After draw - showDetails:', chart.options.showDetails, 'showNames:', chart.options.showNames); // Debug
           if (chart.options.showDetails) {
+            ctx.save();
             chart.data.datasets.forEach((dataset, i) => {
               if (!dataset.hidden) {
                 const meta = chart.getDatasetMeta(i);
@@ -587,39 +579,17 @@ function updateChart() {
                   meta.data.forEach((point, index) => {
                     const name = dataset.label;
                     const x = point.x;
-                    const y = point.y - 5; // Closer to point
+                    const y = point.y - 10;
                     ctx.fillStyle = dataset.borderColor;
                     ctx.font = '12px Arial';
                     ctx.textAlign = 'center';
                     ctx.fillText(name, x, y);
-                    console.log('Details name:', name, 'at', x, y);
                   });
                 }
               }
             });
+            ctx.restore();
           }
-
-          // Draw "Show Names" above animated line
-          if (chart.options.showNames) {
-            chart.data.datasets.forEach((dataset, i) => {
-              if (!dataset.hidden) {
-                const meta = chart.getDatasetMeta(i);
-                const lastPoint = meta.data[meta.data.length - 1];
-                if (lastPoint) {
-                  const name = dataset.label;
-                  const x = lastPoint.x;
-                  const y = lastPoint.y - 5; // Closer to line
-                  ctx.fillStyle = dataset.borderColor;
-                  ctx.font = '12px Arial';
-                  ctx.textAlign = 'center';
-                  ctx.fillText(name, x, y);
-                  console.log('Show Names:', name, 'at', x, y);
-                }
-              }
-            });
-          }
-
-          ctx.restore(); // Reset context
         }
       }]
     }
@@ -664,6 +634,26 @@ function updateChart() {
         currentChart.options.scales.y.max = previousYMax + yStep;
       }
 
+      if (currentChart.options.showNames) {
+        const ctx = currentChart.ctx;
+        ctx.save();
+        datasets.forEach((dataset, i) => {
+          if (!dataset.hidden) {
+            const lastPoint = dataset.data[dataset.data.length - 1];
+            if (lastPoint) {
+              const x = currentChart.scales.x.getPixelForValue(lastPoint.x);
+              const y = currentChart.scales.y.getPixelForValue(lastPoint.y) - 10;
+              ctx.fillStyle = dataset.borderColor;
+              ctx.font = '12px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText(dataset.label, x, y);
+              console.log('Drawing name:', dataset.label, 'at', x, y); // Debug
+            }
+          }
+        });
+        ctx.restore();
+      }
+
       currentChart.update('none');
       requestAnimationFrame(animateLine);
     } else {
@@ -674,6 +664,27 @@ function updateChart() {
       });
       const finalYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
       currentChart.options.scales.y.max = finalYMax;
+
+      if (currentChart.options.showNames) {
+        const ctx = currentChart.ctx;
+        ctx.save();
+        datasets.forEach((dataset, i) => {
+          if (!dataset.hidden) {
+            const lastPoint = dataset.data[dataset.data.length - 1];
+            if (lastPoint) {
+              const x = currentChart.scales.x.getPixelForValue(lastPoint.x);
+              const y = currentChart.scales.y.getPixelForValue(lastPoint.y) - 10;
+              ctx.fillStyle = dataset.borderColor;
+              ctx.font = '12px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText(dataset.label, x, y);
+              console.log('Final name drawn:', dataset.label, 'at', x, y); // Debug
+            }
+          }
+        });
+        ctx.restore();
+      }
+
       currentChart.update('none');
     }
   }
