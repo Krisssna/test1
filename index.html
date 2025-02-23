@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+ <meta http-equiv="content-language" content="en">
+    <link rel="alternate" hreflang="en" href="https://krishnaniraula.com.np/time-series-chart-animation/">
+    <link rel="alternate" hreflang="en-np" href="https://krishnaniraula.com.np/time-series-chart-animation/">
+    <link rel="alternate" hreflang="x-default" href="https://krishnaniraula.com.np/time-series-chart-animation/">
+
+	 <title>Visualize Your Time-series Data</title>
+    <meta name="description" content="Load your time series data in excel or csv format and visualize animation on our website.">
+    <meta name="keywords" content="charts, data, visualization, graphs, analysis, time-series, animation, excel, csv">
+    <meta name="author" content="krishnaniraula.com.np">
+	
+ 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.4.5/gifshot.min.js"></script>
+  <script src="https://unpkg.com/gifshot@0.4.5/dist/gifshot.min.js"></script> <!-- Fallback CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="/styles.css">
+	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7909865065068819"
+     crossorigin="anonymous"></script>
+ 
+</head>
+<body>
+ <nav>
+    <div class="nav-left">
+        <a href="/index.html" class="no-dec">Home</a>
+    </div>
+</nav>
+<h1>Visualize Your Time-series Data</h1>
+	
+  <div id="controls">
+    <button onclick="exportCSV()">Export Table Data (CSV)</button>
+     
+    
+    <button onclick="document.getElementById('fileInput').click()">Import CSV/Excel</button>
+    <input type="file" id="fileInput" style="display: none;" accept=".csv,.xlsx" onchange="handleFileUpload(event)">
+  </div>
+
+  <table id="excelTable">
+    <thead>
+      <tr id="excelHeader"></tr>
+    </thead>
+    <tbody id="excelBody"></tbody>
+  </table>
+
+  <div id="chartContainer">
+  <canvas id="myChart"></canvas>
+  <button id="fullscreenToggle" style="position: absolute; bottom: 10px; right: 20px; z-index: 10; width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.5); border: 2px solid #fff; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='rgba(0, 0, 0, 0.8)'" onmouseout="this.style.backgroundColor='rgba(0, 0, 0, 0.5)'"></button>
+  <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
+    <button onclick="updateChart()">Update Chart</button>
+    <label style="display: flex; align-items: center;">
+      <input type="checkbox" id="showDetailsToggle"> Details
+    </label>
+    <label style="display: flex; align-items: center;">
+      <input type="checkbox" id="showNamesToggle"> Show Names
+    </label>
+    <label>Animation Speed (sec): <input type="number" id="animationSpeed" value="1" min="0.1" step="0.1"></label>
+  </div>
+</div>
+  
+  
+<footer>
+   <div class="footer-container">
+             </div>
+
+        <!-- Social Media Column -->
+        <div class="footer-column">
+            <h3>Social Media</h3>
+            <ul>
+                <li><a href="https://youtube.com/@sankhatro?si=fwaJiabYnMIfFk3q" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i>YouTube</a></li>
+                <li><a href="https://x.com/0kisn" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-x"></i>Krishna's X</a></li>
+
+                <!-- LinkedIn Icon -->
+                <li><a href="https://www.linkedin.com/in/krishna-niraula-7429b2125/" target="_blank" rel="noopener noreferrer" class="linkedin"><i class="fab fa-linkedin-in"></i>Krishna on LinkedIn</a></li>
+            </ul>
+        </div>
+
+        <!-- About Column -->
+        <div class="footer-column">
+            <h3>About</h3>
+            <ul>
+                <p>Email: <a id="contact-email" href="mailto:mail@krishnaniraula.com.np">Email Krishna</a></p>
+                <li><a href="/assets/pp.html">Privacy Policy</a></li>
+                <li><a href="/assets/tfu.html">Terms of Use</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Copyright Section -->
+    <div class="footer-copyright">
+        <p>© 2025 Krishna Niraula. All rights reserved.</p>
+    </div>
+</footer>
+	<script src="index.js"></script>
+	<script src="/scripts.js"></script>
+</body>
+</html>
