@@ -527,7 +527,6 @@ function updateChart() {
   const yMin = Math.min(...allYValues, 0);
   const yMaxInitial = Math.max(...allYValues);
 
-  // Combine 'Names' and 'Details' into a single toggle
 const showNamesToggle = document.getElementById('showNamesToggle');
 
 currentChart = new Chart(ctx, {
@@ -537,7 +536,9 @@ currentChart = new Chart(ctx, {
     responsive: true,
     animation: { duration: 0 },
     plugins: {
-      legend: { position: 'top' }
+      legend: {
+        position: 'top'
+      }
     },
     scales: {
       x: {
@@ -562,30 +563,33 @@ currentChart = new Chart(ctx, {
     plugins: [{
       id: 'customNames',
       afterDatasetsDraw: function(chart) {
+        if (!chart.options.showNames) return;
         const ctx = chart.ctx;
-        if (chart.options.showNames) {
-          ctx.save();
-          chart.data.datasets.forEach((dataset, i) => {
-            if (!dataset.hidden) {
-              const meta = chart.getDatasetMeta(i);
-              if (meta.data.length > 0) {
-                meta.data.forEach((point, index) => {
-                  const name = dataset.label;
-                  const x = point.x;
-                  const y = point.y - 10;
-                  ctx.fillStyle = dataset.borderColor;
-                  ctx.font = '12px Arial';
-                  ctx.textAlign = 'center';
-                  ctx.fillText(name, x, y);
-                });
-              }
-            }
-          });
-          ctx.restore();
-        }
+        ctx.save();
+        chart.data.datasets.forEach((dataset, i) => {
+          if (!dataset.hidden) {
+            const meta = chart.getDatasetMeta(i);
+            meta.data.forEach((point, index) => {
+              const name = dataset.label;
+              const x = point.x;
+              const y = point.y - 10;
+              ctx.fillStyle = dataset.borderColor;
+              ctx.font = '12px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText(name, x, y);
+            });
+          }
+        });
+        ctx.restore();
       }
     }]
   }
+});
+
+// Toggle Names Visibility
+showNamesToggle.addEventListener('change', function() {
+  currentChart.options.showNames = showNamesToggle.checked;
+  currentChart.update();
 });
 
 function animateLine(timestamp) {
