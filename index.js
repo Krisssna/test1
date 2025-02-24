@@ -527,132 +527,103 @@ function updateChart() {
   const yMin = Math.min(...allYValues, 0);
   const yMaxInitial = Math.max(...allYValues);
 
-  const showDetailsToggle = document.getElementById('showDetailsToggle');
-  const showNamesToggle = document.getElementById('showNamesToggle');
+  // Combine 'Names' and 'Details' into a single toggle
+const showNamesToggle = document.getElementById('showNamesToggle');
 
-  currentChart = new Chart(ctx, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true,
-      animation: { duration: 0 },
-      plugins: {
-        legend: {
-          position: 'top'
+currentChart = new Chart(ctx, {
+  type: 'line',
+  data: { datasets },
+  options: {
+    responsive: true,
+    animation: { duration: 0 },
+    plugins: {
+      legend: { position: 'top' }
+    },
+    scales: {
+      x: {
+        type: 'linear',
+        position: 'bottom',
+        min: Math.min(...timeLabels),
+        max: Math.max(...timeLabels),
+        ticks: {
+          callback: function(value) {
+            return timeLabels.includes(value) ? value : null;
+          },
+          autoSkip: false
         }
       },
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'bottom',
-          min: Math.min(...timeLabels),
-          max: Math.max(...timeLabels),
-          ticks: {
-            callback: function(value) {
-              if (timeLabels.includes(value)) {
-                return value;
-              }
-              return null;
-            },
-            autoSkip: false
-          }
-        },
-        y: {
-          beginAtZero: true,
-          min: yMin,
-          max: yMaxInitial
-        }
-      },
-      showDetails: showDetailsToggle ? showDetailsToggle.checked : false,
-      showNames: showNamesToggle ? showNamesToggle.checked : false,
-      plugins: [{
-        id: 'customNames',
-        afterDatasetsDraw: function(chart) {
-          const ctx = chart.ctx;
-          console.log('After draw - showDetails:', chart.options.showDetails, 'showNames:', chart.options.showNames); // Debug
-          if (chart.options.showDetails) {
-            ctx.save();
-            chart.data.datasets.forEach((dataset, i) => {
-              if (!dataset.hidden) {
-                const meta = chart.getDatasetMeta(i);
-                if (meta.data.length > 0) {
-                  meta.data.forEach((point, index) => {
-                    const name = dataset.label;
-                    const x = point.x;
-                    const y = point.y - 10;
-                    ctx.fillStyle = dataset.borderColor;
-                    ctx.font = '12px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(name, x, y);
-                  });
-                }
-              }
-            });
-            ctx.restore();
-          }
-        }
-      }]
-    }
-  });
-
-  let step = 0;
-  const totalSteps = data.length - 1;
-
-  function animateLine(timestamp) {
-    if (!animateLine.startTime) animateLine.startTime = timestamp;
-    const elapsed = timestamp - animateLine.startTime;
-
-    const totalAnimationTime = animationSpeed;
-    const timePerStep = totalAnimationTime / totalSteps;
-    const progress = elapsed / timePerStep;
-    const currentStep = Math.floor(progress);
-    const stepProgress = progress - currentStep;
-
-    if (currentStep < totalSteps) {
-      datasets.forEach((dataset, i) => {
-        const fromX = timeLabels[currentStep];
-        const fromY = data[currentStep][i];
-        const toX = timeLabels[currentStep + 1];
-        const toY = data[currentStep + 1][i];
-
-        const interpolatedX = fromX + (toX - fromX) * stepProgress;
-        const interpolatedY = fromY + (toY - fromY) * stepProgress;
-
-        while (dataset.data.length <= currentStep) {
-          dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
-        }
-
-        dataset.data[currentStep + 1] = { x: interpolatedX, y: interpolatedY };
-      });
-
-      const currentYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
-      const targetYMax = Math.max(currentYMax, yMaxInitial);
-      if (targetYMax !== currentChart.options.scales.y.max) {
-        const previousYMax = currentChart.options.scales.y.max;
-        const yDiff = targetYMax - previousYMax;
-        const yStep = yDiff * stepProgress * 0.1;
-        currentChart.options.scales.y.max = previousYMax + yStep;
+      y: {
+        beginAtZero: true,
+        min: yMin,
+        max: yMaxInitial
       }
-
-      if (currentChart.options.showNames) {
-        const ctx = currentChart.ctx;
-        ctx.save();
-        datasets.forEach((dataset, i) => {
-          if (!dataset.hidden) {
-            const lastPoint = dataset.data[dataset.data.length - 1];
-            if (lastPoint) {
-              const x = currentChart.scales.x.getPixelForValue(lastPoint.x);
-              const y = currentChart.scales.y.getPixelForValue(lastPoint.y) - 10;
-              ctx.fillStyle = dataset.borderColor;
-              ctx.font = '12px Arial';
-              ctx.textAlign = 'center';
-              ctx.fillText(dataset.label, x, y);
-              console.log('Drawing name:', dataset.label, 'at', x, y); // Debug
+    },
+    showNames: showNamesToggle ? showNamesToggle.checked : false,
+    plugins: [{
+      id: 'customNames',
+      afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        if (chart.options.showNames) {
+          ctx.save();
+          chart.data.datasets.forEach((dataset, i) => {
+            if (!dataset.hidden) {
+              const meta = chart.getDatasetMeta(i);
+              if (meta.data.length > 0) {
+                meta.data.forEach((point, index) => {
+                  const name = dataset.label;
+                  const x = point.x;
+                  const y = point.y - 10;
+                  ctx.fillStyle = dataset.borderColor;
+                  ctx.font = '12px Arial';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(name, x, y);
+                });
+              }
             }
-          }
-        });
-        ctx.restore();
+          });
+          ctx.restore();
+        }
       }
+    }]
+  }
+});
+
+function animateLine(timestamp) {
+  if (!animateLine.startTime) animateLine.startTime = timestamp;
+  const elapsed = timestamp - animateLine.startTime;
+  const totalAnimationTime = animationSpeed;
+  const timePerStep = totalAnimationTime / totalSteps;
+  const progress = elapsed / timePerStep;
+  const currentStep = Math.floor(progress);
+  const stepProgress = progress - currentStep;
+
+  if (currentStep < totalSteps) {
+    datasets.forEach((dataset, i) => {
+      const fromX = timeLabels[currentStep];
+      const fromY = data[currentStep][i];
+      const toX = timeLabels[currentStep + 1];
+      const toY = data[currentStep + 1][i];
+
+      const interpolatedX = fromX + (toX - fromX) * stepProgress;
+      const interpolatedY = fromY + (toY - fromY) * stepProgress;
+
+      while (dataset.data.length <= currentStep) {
+        dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
+      }
+      dataset.data[currentStep + 1] = { x: interpolatedX, y: interpolatedY };
+    });
+
+    currentChart.update('none');
+    requestAnimationFrame(animateLine);
+  } else {
+    currentChart.update('none');
+  }
+}
+
+showNamesToggle.addEventListener('change', function() {
+  currentChart.options.showNames = this.checked;
+  currentChart.update();
+});
 
       currentChart.update('none');
       requestAnimationFrame(animateLine);
