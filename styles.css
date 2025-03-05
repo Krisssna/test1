@@ -80,13 +80,14 @@ input {
     background: white;
     padding: 20px;
     border-radius: 5px;
-    margin: 20px 0; /* Adjusted to ensure spacing above and below */
+    margin: 20px 0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     position: relative;
     width: 100%;
-    display: flex; /* From HTML inline style */
-    flex-direction: row;
+    display: flex;
+    flex-direction: row; /* Keep y-axis label on left */
     align-items: center;
+    flex-wrap: nowrap; /* Prevent wrapping */
 }
 
 #myChart {
@@ -136,11 +137,11 @@ input:hover, button:hover {
     color: #333;
 }
 
-/* Styles for chart controls */
 #chartControls {
     text-align: center;
     margin-top: 10px;
     padding: 10px;
+    display: block; /* Ensure it’s below, not flexing to the right */
 }
 
 #chartControls button {
