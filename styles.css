@@ -208,3 +208,22 @@ input:hover, button:hover {
 #showDetailsToggle, #showNamesToggle {
     margin-right: 5px; /* Unused now, can be removed if not needed elsewhere */
 }
+
+@media (max-width: 768px) {
+    #yAxisLabel {
+        width: 30px;
+    }
+    #yAxisName {
+        font-size: 12px;
+        width: 80px;
+    }
+    #chartControls button {
+        padding: 3px 10px;
+        font-size: 14px;
+    }
+}
+
+#detailsToggle.active {
+    background-color: #4CAF50;
+    color: white;
+}
