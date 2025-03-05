@@ -85,14 +85,15 @@ input {
     position: relative;
     width: 100%;
     display: flex;
-    flex-direction: row; /* Keep y-axis label on left */
+    flex-direction: row;
     align-items: center;
-    flex-wrap: nowrap; /* Prevent wrapping */
+    flex-wrap: nowrap;
 }
 
 #myChart {
     width: 100% !important;
     height: 400px !important;
+    overflow: visible !important;
 }
 
 #excelTable th:hover, #excelTable td:hover {
