@@ -88,11 +88,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
  const detailsToggle = document.getElementById('detailsToggle');
     detailsToggle.addEventListener('click', function() {
-        if (currentChart) {
-            currentChart.options.showDetails = !currentChart.options.showDetails;
-            currentChart.update('none');
-        }
-    });
+    if (currentChart) {
+        currentChart.options.showDetails = !currentChart.options.showDetails;
+        this.classList.toggle('active', currentChart.options.showDetails);
+        currentChart.update('none');
+    }
+});
 });
 
 let currentChart = null;
