@@ -1,9 +1,3 @@
-async function handleRequest(request) {
-  return new Response(html, {
-    headers: { 'content-type': 'text/html' },
-  });
-}
-
 
 
 // Full-screen toggle functionality
@@ -92,29 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
- const showDetailsToggle = document.getElementById('showDetailsToggle');
-  const showNamesToggle = document.getElementById('showNamesToggle');
-
-  if (!showDetailsToggle || !showNamesToggle) {
-    console.error('Toggle checkboxes not found');
-    return;
-  }
-
-  showDetailsToggle.addEventListener('change', function() {
-    if (currentChart) {
-      currentChart.options.showDetails = this.checked;
-      console.log('Details checkbox:', this.checked); // Debug
-      currentChart.update();
-    }
-  });
-
-  showNamesToggle.addEventListener('change', function() {
-    if (currentChart) {
-      currentChart.options.showNames = this.checked;
-      console.log('Show Names checkbox:', this.checked); // Debug
-      currentChart.update();
-    }
-  });
+ const detailsToggle = document.getElementById('detailsToggle');
+    detailsToggle.addEventListener('click', function() {
+        if (currentChart) {
+            currentChart.options.showDetails = !currentChart.options.showDetails;
+            currentChart.update('none');
+        }
+    });
 });
 
 let currentChart = null;
@@ -125,7 +103,6 @@ const maxRows = 500;
 const minColumns = 1;
 const minRows = 1;
 const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
-
 function initializeTable() {
   updateTableStructure();
   createChart();
@@ -504,177 +481,166 @@ function createChart() {
 }
 
 function updateChart() {
-  if (currentChart) currentChart.destroy();
+    if (currentChart) currentChart.destroy();
 
-  const canvas = document.getElementById('myChart');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const canvas = document.getElementById('myChart');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const data = getTableData();
-  const timeLabels = getTimeLabels();
-  const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
-  const animationSpeed = parseFloat(document.getElementById('animationSpeed').value) * 1000;
+    const data = getTableData();
+    const timeLabels = getTimeLabels();
+    const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
+    const animationSpeed = parseFloat(document.getElementById('animationSpeed').value) * 1000;
+    const xAxisName = document.getElementById('xAxisName').value || 'X-Axis';
+    const yAxisName = document.getElementById('yAxisName').value || 'Y-Axis';
 
-  const datasets = columnNames.map((name, i) => ({
-    label: name,
-    data: [],
-    borderColor: colors[i % colors.length],
-    tension: 0.4,
-    fill: false,
-  }));
+    if (!data.length || !timeLabels.length) {
+        alert('No data available to chart!');
+        return;
+    }
 
-  const allYValues = data.flat();
-  const yMin = Math.min(...allYValues, 0);
-  const yMaxInitial = Math.max(...allYValues);
+    const datasets = columnNames.map((name, i) => ({
+        label: name,
+        data: [],
+        borderColor: colors[i % colors.length],
+        tension: 0.4,
+        fill: false,
+    }));
 
-const showNamesToggle = document.getElementById('showNamesToggle');
+    const allYValues = data.flat();
+    const yMin = Math.min(...allYValues, 0);
+    const yMaxInitial = Math.max(...allYValues);
 
-currentChart = new Chart(ctx, {
-  type: 'line',
-  data: { datasets },
-  options: {
-    responsive: true,
-    animation: { duration: 0 },
-    plugins: {
-      legend: {
-        position: 'top'
-      }
-    },
-    scales: {
-      x: {
-        type: 'linear',
-        position: 'bottom',
-        min: Math.min(...timeLabels),
-        max: Math.max(...timeLabels),
-        ticks: {
-          callback: function(value) {
-            return timeLabels.includes(value) ? value : null;
-          },
-          autoSkip: false
+    currentChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            animation: { duration: 0 },
+            plugins: {
+                legend: { display: false }, // Remove legend since Details is now a button
+                title: { display: false }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    min: Math.min(...timeLabels),
+                    max: Math.max(...timeLabels),
+                    title: {
+                        display: true,
+                        text: xAxisName,
+                        padding: 10
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            if (timeLabels.includes(value)) return value;
+                            return null;
+                        },
+                        autoSkip: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    min: yMin,
+                    max: yMaxInitial,
+                    title: {
+                        display: true,
+                        text: yAxisName,
+                        padding: 10
+                    }
+                }
+            },
+            showDetails: false,
+            plugins: [{
+                id: 'customNames',
+                afterDatasetsDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    if (chart.options.showDetails) {
+                        ctx.save();
+                        chart.data.datasets.forEach((dataset, i) => {
+                            if (!dataset.hidden) {
+                                const meta = chart.getDatasetMeta(i);
+                                meta.data.forEach((point, index) => {
+                                    const name = dataset.label;
+                                    const x = point.x;
+                                    const y = point.y - 10; // Position above the line
+                                    ctx.fillStyle = dataset.borderColor;
+                                    ctx.font = '12px Arial';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText(name, x, y);
+                                });
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }
+            }]
         }
-      },
-      y: {
-        beginAtZero: true,
-        min: yMin,
-        max: yMaxInitial
-      }
-    },
-    showNames: showNamesToggle ? showNamesToggle.checked : false,
-    plugins: [{
-      id: 'customNames',
-      afterDatasetsDraw: function(chart) {
-        if (!chart.options.showNames) return;
-        const ctx = chart.ctx;
-        ctx.save();
-        chart.data.datasets.forEach((dataset, i) => {
-          if (!dataset.hidden) {
-            const meta = chart.getDatasetMeta(i);
-            meta.data.forEach((point, index) => {
-              const name = dataset.label;
-              const x = point.x;
-              const y = point.y - 10;
-              ctx.fillStyle = dataset.borderColor;
-              ctx.font = '12px Arial';
-              ctx.textAlign = 'center';
-              ctx.fillText(name, x, y);
+    });
+
+    let step = 0;
+    const totalSteps = data.length - 1;
+
+    function animateLine(timestamp) {
+        if (!animateLine.startTime) animateLine.startTime = timestamp;
+        const elapsed = timestamp - animateLine.startTime;
+        const totalAnimationTime = animationSpeed;
+        const timePerStep = totalAnimationTime / totalSteps;
+        const progress = elapsed / timePerStep;
+        const currentStep = Math.floor(progress);
+        const stepProgress = progress - currentStep;
+
+        if (currentStep < totalSteps) {
+            datasets.forEach((dataset, i) => {
+                const fromX = timeLabels[currentStep];
+                const fromY = data[currentStep][i];
+                const toX = timeLabels[currentStep + 1];
+                const toY = data[currentStep + 1][i];
+
+                const interpolatedX = fromX + (toX - fromX) * stepProgress;
+                const interpolatedY = fromY + (toY - fromY) * stepProgress;
+
+                while (dataset.data.length <= currentStep) {
+                    dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
+                }
+                dataset.data[currentStep + 1] = { x: interpolatedX, y: interpolatedY };
             });
-          }
-        });
-        ctx.restore();
-      }
-    }]
-  }
-});
 
-// Toggle Names Visibility
-showNamesToggle.addEventListener('change', function() {
-  currentChart.options.showNames = showNamesToggle.checked;
-  currentChart.update();
-});
-
-function animateLine(timestamp) {
-  if (!animateLine.startTime) animateLine.startTime = timestamp;
-  const elapsed = timestamp - animateLine.startTime;
-  const totalAnimationTime = animationSpeed;
-  const timePerStep = totalAnimationTime / totalSteps;
-  const progress = elapsed / timePerStep;
-  const currentStep = Math.floor(progress);
-  const stepProgress = progress - currentStep;
-
-  if (currentStep < totalSteps) {
-    datasets.forEach((dataset, i) => {
-      const fromX = timeLabels[currentStep];
-      const fromY = data[currentStep][i];
-      const toX = timeLabels[currentStep + 1];
-      const toY = data[currentStep + 1][i];
-
-      const interpolatedX = fromX + (toX - fromX) * stepProgress;
-      const interpolatedY = fromY + (toY - fromY) * stepProgress;
-
-      while (dataset.data.length <= currentStep) {
-        dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
-      }
-      dataset.data[currentStep + 1] = { x: interpolatedX, y: interpolatedY };
-    });
-
-    currentChart.update('none');
-    requestAnimationFrame(animateLine);
-  } else {
-    currentChart.update('none');
-  }
-}
-
-showNamesToggle.addEventListener('change', function() {
-  currentChart.options.showNames = this.checked;
-  currentChart.update();
-});
-
-      currentChart.update('none');
-      requestAnimationFrame(animateLine);
-    } else {
-      datasets.forEach((dataset, i) => {
-        while (dataset.data.length < data.length) {
-          dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
-        }
-      });
-      const finalYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
-      currentChart.options.scales.y.max = finalYMax;
-
-      if (currentChart.options.showNames) {
-        const ctx = currentChart.ctx;
-        ctx.save();
-        datasets.forEach((dataset, i) => {
-          if (!dataset.hidden) {
-            const lastPoint = dataset.data[dataset.data.length - 1];
-            if (lastPoint) {
-              const x = currentChart.scales.x.getPixelForValue(lastPoint.x);
-              const y = currentChart.scales.y.getPixelForValue(lastPoint.y) - 10;
-              ctx.fillStyle = dataset.borderColor;
-              ctx.font = '12px Arial';
-              ctx.textAlign = 'center';
-              ctx.fillText(dataset.label, x, y);
-              console.log('Final name drawn:', dataset.label, 'at', x, y); // Debug
+            const currentYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
+            const targetYMax = Math.max(currentYMax, yMaxInitial);
+            if (targetYMax !== currentChart.options.scales.y.max) {
+                const previousYMax = currentChart.options.scales.y.max;
+                const yDiff = targetYMax - previousYMax;
+                const yStep = yDiff * stepProgress * 0.1;
+                currentChart.options.scales.y.max = previousYMax + yStep;
             }
-          }
+
+            currentChart.update('none');
+            requestAnimationFrame(animateLine);
+        } else {
+            datasets.forEach((dataset, i) => {
+                while (dataset.data.length < data.length) {
+                    dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
+                }
+            });
+            const finalYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
+            currentChart.options.scales.y.max = finalYMax;
+            currentChart.update('none');
+        }
+    }
+
+    if (totalSteps >= 0) {
+        datasets.forEach((dataset, i) => {
+            dataset.data.push({ x: timeLabels[0], y: data[0][i] });
         });
-        ctx.restore();
-      }
-
-      currentChart.update('none');
+        currentChart.update('none');
+        if (totalSteps > 0) {
+            animateLine.startTime = null; // Reset start time
+            requestAnimationFrame(animateLine);
+        }
     }
-  }
-
-  if (totalSteps >= 0) {
-    datasets.forEach((dataset, i) => {
-      dataset.data.push({ x: timeLabels[0], y: data[0][i] });
-    });
-    currentChart.update('none');
-    if (totalSteps > 0) {
-      requestAnimationFrame(animateLine);
-    }
-  }
 }
-
 function exportCSV() {
   const headers = Array.from(document.querySelectorAll('#excelHeader th input')).map(input => input.value);
   const csvContent = [headers.join(',')];
