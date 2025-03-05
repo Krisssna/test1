@@ -1,113 +1,210 @@
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 20px; 
-    }
- .row-controls {
-      position: absolute;
-      left: -40px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: none;
-      gap: 2px;
-    }
-    tr:hover .row-controls {
-      display: flex;
-    }
-    .column-controls {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      gap: 2px;
-    }
-    th:hover .column-controls {
-      display: flex;
-    }
-    .row-controls-cell, th {
-      position: relative;
-    }
+body { 
+    font-family: Arial, sans-serif; 
+    margin: 20px; 
+}
 
-    #excelTable {
-      border-collapse: collapse;
-      margin: 20px 0; 
-      width: 100%;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-    }
-    #excelTable th, #excelTable td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-      background: #f8f8f8;
-      transition: background-color 0.3s;
-    }
-    #excelTable th {
-      background-color: #e6e6e6;
-      font-weight: bold;
-    }
-    button.addButton {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #4CAF50;
-    }
-    button.delButton {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #F44336;
-    }
-    input {
-      width: 80px; 
-      text-align: center;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-    }
-   #chartContainer {
-  background: white;
-  padding: 20px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  position: relative;
-  width: 100%; /* Ensure container takes full width */
+.row-controls {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    gap: 2px;
+}
+
+tr:hover .row-controls {
+    display: flex;
+}
+
+.column-controls {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 2px;
+}
+
+th:hover .column-controls {
+    display: flex;
+}
+
+.row-controls-cell, th {
+    position: relative;
+}
+
+#excelTable {
+    border-collapse: collapse;
+    margin: 20px 0; 
+    width: 100%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+#excelTable th, #excelTable td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    background: #f8f8f8;
+    transition: background-color 0.3s;
+}
+
+#excelTable th {
+    background-color: #e6e6e6;
+    font-weight: bold;
+}
+
+button.addButton {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #4CAF50;
+}
+
+button.delButton {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #F44336;
+}
+
+input {
+    width: 80px; 
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#chartContainer {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 20px 0; /* Adjusted to ensure spacing above and below */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: 100%;
+    display: flex; /* From HTML inline style */
+    flex-direction: row;
+    align-items: center;
 }
 
 #myChart {
-  width: 100% !important; /* Override any inline styles */
-  height: 400px !important; /* Match JS size, adjust as needed */
+    width: 100% !important;
+    height: 400px !important;
 }
-    #excelTable th:hover, #excelTable td:hover {
-      background-color: #e6e6e6;
-    }
-    input:hover, button:hover {
-      background-color: #f0f0f0;
-    }
 
-/* Add to styles.css */
+#excelTable th:hover, #excelTable td:hover {
+    background-color: #e6e6e6;
+}
+
+input:hover, button:hover {
+    background-color: #f0f0f0;
+}
+
+/* New styles for axis labels */
+#yAxisLabel {
+    width: 50px;
+    text-align: center;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#yAxisName {
+    background: none;
+    border: none;
+    outline: none;
+    transform: rotate(-90deg);
+    width: 100px;
+    font-size: 14px;
+    color: #333;
+}
+
+#xAxisLabel {
+    text-align: center;
+    margin-top: 10px;
+}
+
+#xAxisName {
+    background: none;
+    border: none;
+    outline: none;
+    width: 100px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Styles for chart controls */
+#chartControls {
+    text-align: center;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+#chartControls button {
+    font-family: Arial, sans-serif;
+    padding: 5px 15px;
+    border-radius: 3px;
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s;
+}
+
+#chartControls button:hover {
+    background-color: #e6e6e6;
+}
+
+#chartControls label {
+    font-family: Arial, sans-serif;
+    display: block;
+    margin-top: 10px;
+}
+
+#chartControls input[type="number"] {
+    width: 60px;
+    margin-left: 5px;
+}
+
+/* Style for the Details button specifically */
+#detailsToggle {
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+#detailsToggle:hover {
+    background-color: #e6e6e6;
+}
+
+/* Ensure controls at the top look consistent */
+#controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#controls button {
+    font-family: Arial, sans-serif;
+    padding: 5px 15px;
+    border-radius: 3px;
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s;
+}
+
+#controls button:hover {
+    background-color: #e6e6e6;
+}
+
+/* Remove unused styles */
 .chart-legend {
-  margin-bottom: 10px; /* Space between legend and chart */
+    margin-bottom: 10px; /* Kept but unused since legend is removed */
 }
 
-/* Style checkboxes for consistency with your buttons */
 #showDetailsToggle, #showNamesToggle {
-  margin-right: 5px;
+    margin-right: 5px; /* Unused now, can be removed if not needed elsewhere */
 }
-
-/* Optional: Style the Update Chart button and checkboxes container */
-#chartContainer button, #chartContainer label {
-  font-family: Arial, sans-serif;
-  padding: 5px 10px;
-  border-radius: 3px;
-  background-color: #f8f8f8;
-  border: 1px solid #ccc;
-  cursor: pointer;
-}
-
-#chartContainer button:hover, #chartContainer label:hover {
-  background-color: #f0f0f0;
-}
-
-
