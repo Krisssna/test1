@@ -1,3 +1,4 @@
+// Full-screen toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
     const fullscreenToggle = document.getElementById('fullscreenToggle');
     const chartContainer = document.getElementById('chartContainer');
@@ -66,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentChart.options.showDetails = !currentChart.options.showDetails;
                 this.classList.toggle('active', currentChart.options.showDetails);
                 console.log('Show Details toggled to:', currentChart.options.showDetails);
-                currentChart.update(); // Remove 'none' to ensure plugin runs
+                currentChart.update();
             } else {
                 console.error('Chart not initialized when toggling Details');
             }
@@ -84,6 +85,38 @@ const maxRows = 500;
 const minColumns = 1;
 const minRows = 1;
 const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
+// Register the custom plugin globally
+const customNamesPlugin = {
+    id: 'customNames',
+    afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        if (chart.options.showDetails) {
+            console.log('Drawing names, showDetails:', chart.options.showDetails);
+            ctx.save();
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                if (meta.data && meta.data.length > 0) {
+                    meta.data.forEach((point, index) => {
+                        const name = dataset.label;
+                        const x = point.x;
+                        const y = point.y - 10;
+                        ctx.fillStyle = dataset.borderColor;
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        console.log(`Drawing ${name} at (${x}, ${y})`);
+                        ctx.fillText(name, x, y);
+                    });
+                } else {
+                    console.warn(`No meta data for dataset ${dataset.label}`);
+                }
+            });
+            ctx.restore();
+        }
+    }
+};
+
+Chart.register(customNamesPlugin);
 
 function initializeTable() {
     updateTableStructure();
@@ -397,37 +430,10 @@ function createChart(timeLabels, data, columnNames, xAxisName, yAxisName) {
                     title: { display: true, text: yAxisName }
                 }
             },
-            showDetails: false,
-            plugins: [{
-                id: 'customNames',
-                afterDatasetsDraw: function(chart) {
-                    const ctx = chart.ctx;
-                    if (chart.options.showDetails) {
-                        console.log('Drawing names, showDetails:', chart.options.showDetails);
-                        ctx.save();
-                        chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i);
-                            if (meta.data && meta.data.length > 0) {
-                                meta.data.forEach((point, index) => {
-                                    const name = dataset.label;
-                                    const x = point.x;
-                                    const y = point.y - 10;
-                                    ctx.fillStyle = dataset.borderColor;
-                                    ctx.font = '12px Arial';
-                                    ctx.textAlign = 'center';
-                                    console.log(`Drawing ${name} at (${x}, ${y})`);
-                                    ctx.fillText(name, x, y);
-                                });
-                            } else {
-                                console.warn(`No meta data for dataset ${dataset.label}`);
-                            }
-                        });
-                        ctx.restore();
-                    }
-                }
-            }]
+            showDetails: false
         }
     });
+    console.log('Chart initialized:', currentChart);
     return datasets;
 }
 
@@ -486,7 +492,7 @@ function updateChart() {
                 currentChart.options.scales.y.max = previousYMax + yStep;
             }
 
-            currentChart.update(); // Remove 'none' to ensure plugin runs
+            currentChart.update();
             requestAnimationFrame(animateLine);
         } else {
             datasets.forEach((dataset, i) => {
