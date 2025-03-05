@@ -1,99 +1,77 @@
-
-
 // Full-screen toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
-  const fullscreenToggle = document.getElementById('fullscreenToggle');
-  const chartContainer = document.getElementById('chartContainer');
-  const chartCanvas = document.getElementById('myChart');
+    const fullscreenToggle = document.getElementById('fullscreenToggle');
+    const chartContainer = document.getElementById('chartContainer');
+    const chartCanvas = document.getElementById('myChart');
 
-  if (!fullscreenToggle || !chartContainer || !chartCanvas) {
-    console.error('Fullscreen toggle, chart container, or canvas not found in DOM');
-    return;
-  }
+    if (!fullscreenToggle || !chartContainer || !chartCanvas) {
+        console.error('Fullscreen toggle, chart container, or canvas not found in DOM');
+        return;
+    }
 
-  // Function to detect mobile devices
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-           (window.innerWidth <= 768 && window.innerHeight <= 1024); // Fallback for smaller screens
-  }
+    function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (window.innerWidth <= 768 && window.innerHeight <= 1024);
+    }
 
-  fullscreenToggle.addEventListener('click', function() {
-    const isMobileDevice = isMobile();
+    fullscreenToggle.addEventListener('click', function() {
+        const isMobileDevice = isMobile();
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+            if (chartContainer.requestFullscreen) {
+                chartContainer.requestFullscreen().then(() => {
+                    if (isMobileDevice) {
+                        chartCanvas.style.height = '80vh';
+                        if (currentChart) currentChart.resize();
+                    }
+                }).catch(err => console.error('Error enabling fullscreen:', err));
+            } else if (chartContainer.webkitRequestFullscreen) {
+                chartContainer.webkitRequestFullscreen().then(() => {
+                    if (isMobileDevice) {
+                        chartCanvas.style.height = '95vh';
+                        if (currentChart) currentChart.resize();
+                    }
+                }).catch(err => console.error('Webkit fullscreen error:', err));
+            } else if (chartContainer.mozRequestFullScreen) {
+                chartContainer.mozRequestFullScreen().then(() => {
+                    if (isMobileDevice) {
+                        chartCanvas.style.height = '80vh';
+                        if (currentChart) currentChart.resize();
+                    }
+                }).catch(err => console.error('Mozilla fullscreen error:', err));
+            } else if (chartContainer.msRequestFullscreen) {
+                chartContainer.msRequestFullscreen().then(() => {
+                    if (isMobileDevice) {
+                        chartCanvas.style.height = '80vh';
+                        if (currentChart) currentChart.resize();
+                    }
+                }).catch(err => console.error('MS fullscreen error:', err));
+            }
+        } else {
+            const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (exitFullscreen) {
+                exitFullscreen.call(document).then(() => {
+                    if (isMobileDevice) {
+                        chartCanvas.style.height = '';
+                        if (currentChart) currentChart.resize();
+                    }
+                });
+            }
+        }
+    });
 
-    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-      // Entering full-screen
-      if (chartContainer.requestFullscreen) {
-        chartContainer.requestFullscreen().then(() => {
-          // Adjust height only on mobile
-          if (isMobileDevice) {
-            chartCanvas.style.height = '80vh'; // Increase height (adjust value as needed)
-            if (currentChart) currentChart.resize(); 
-          }
-        }).catch(err => {
-          console.error('Error enabling fullscreen:', err);
-          alert('Fullscreen not supported on this device/browser');
+    // Details toggle
+    const detailsToggle = document.getElementById('detailsToggle');
+    if (detailsToggle) {
+        detailsToggle.addEventListener('click', function() {
+            if (currentChart) {
+                currentChart.options.showDetails = !currentChart.options.showDetails;
+                this.classList.toggle('active', currentChart.options.showDetails);
+                currentChart.update('none');
+            }
         });
-      } else if (chartContainer.webkitRequestFullscreen) {
-        chartContainer.webkitRequestFullscreen().then(() => {
-          if (isMobileDevice) {
-            chartCanvas.style.height = '95vh';
-            if (currentChart) currentChart.resize();
-          }
-        }).catch(err => {
-          console.error('Webkit fullscreen error:', err);
-          alert('Fullscreen not supported on this device/browser');
-        });
-      } else if (chartContainer.mozRequestFullScreen) {
-        chartContainer.mozRequestFullScreen().then(() => {
-          if (isMobileDevice) {
-            chartCanvas.style.height = '80vh';
-            if (currentChart) currentChart.resize();
-          }
-        }).catch(err => {
-          console.error('Mozilla fullscreen error:', err);
-          alert('Fullscreen not supported on this device/browser');
-        });
-      } else if (chartContainer.msRequestFullscreen) {
-        chartContainer.msRequestFullscreen().then(() => {
-          if (isMobileDevice) {
-            chartCanvas.style.height = '80vh';
-            if (currentChart) currentChart.resize();
-          }
-        }).catch(err => {
-          console.error('MS fullscreen error:', err);
-          alert('Fullscreen not supported on this device/browser');
-        });
-      } else {
-        console.error('Fullscreen API not supported');
-        alert('Fullscreen not supported on this device/browser');
-      }
     } else {
-     
-      const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-      if (exitFullscreen) {
-        exitFullscreen.call(document).then(() => {
-          
-          if (isMobileDevice) {
-            chartCanvas.style.height = ''; 
-            if (currentChart) currentChart.resize();
-          }
-        });
-      }
+        console.error('Details toggle not found in DOM');
     }
-  });
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
- const detailsToggle = document.getElementById('detailsToggle');
-    detailsToggle.addEventListener('click', function() {
-    if (currentChart) {
-        currentChart.options.showDetails = !currentChart.options.showDetails;
-        this.classList.toggle('active', currentChart.options.showDetails);
-        currentChart.update('none');
-    }
-});
 });
 
 let currentChart = null;
@@ -104,114 +82,103 @@ const maxRows = 500;
 const minColumns = 1;
 const minRows = 1;
 const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
 function initializeTable() {
-  updateTableStructure();
-  createChart();
+    updateTableStructure();
+    updateChart(); // Call updateChart instead of createChart for consistency
 }
 
 function updateTableStructure() {
-  const header = document.getElementById('excelHeader');
-  const body = document.getElementById('excelBody');
-  
-  header.innerHTML = '';
-  body.innerHTML = '';
-  
-  let timeTh = document.createElement('th');
-  let timeInputHeader = document.createElement('input');
-  timeInputHeader.type = 'text';
-  timeInputHeader.value = 'Time';
-  timeTh.appendChild(timeInputHeader);
-  header.appendChild(timeTh);
-  
-  for (let i = 0; i < columns; i++) {
-    let columnTh = document.createElement('th');
-    let columnControlsDiv = document.createElement('div');
-    columnControlsDiv.className = 'column-controls';
-  
-    let addButton = document.createElement('button');
-    addButton.className = 'addButton';
-    addButton.textContent = '+';
-    addButton.onclick = function () {
-      addColumnAfter(this);
-    };
-  
-    let deleteButton = document.createElement('button');
-    deleteButton.className = 'delButton';
-    deleteButton.textContent = '-';
-    deleteButton.onclick = function () {
-      deleteColumn(this);
-    };
-  
-    columnControlsDiv.appendChild(addButton);
-    columnControlsDiv.appendChild(deleteButton);
-    columnTh.appendChild(columnControlsDiv);
-  
-    let columnInput = document.createElement('input');
-    columnInput.type = 'text';
-    columnInput.value = 'Name';
-    columnTh.appendChild(columnInput);
-  
-    header.appendChild(columnTh);
-  }
-  
-  for (let i = 0; i < rows; i++) {
-    let newRow = document.createElement('tr');
-  
-    let timeTd = document.createElement('td');
-    timeTd.style.position = 'relative';
-  
-    let rowControlsDiv = document.createElement('div');
-    rowControlsDiv.className = 'row-controls';
-    rowControlsDiv.style.display = 'none'; 
-    rowControlsDiv.style.position = 'absolute';
-    rowControlsDiv.style.left = '-10px';
-    rowControlsDiv.style.top = '50%';
-    rowControlsDiv.style.transform = 'translateY(-50%)';
-    rowControlsDiv.style.flexDirection = 'column';
-  
-    let addRowButton = document.createElement('button');
-    addRowButton.className = 'addButton';
-    addRowButton.textContent = '+';
-    addRowButton.onclick = function () {
-      addRowAfter(this);
-    };
-  
-    let deleteRowButton = document.createElement('button');
-    deleteRowButton.className = 'delButton';
-    deleteRowButton.textContent = '-';
-    deleteRowButton.onclick = function () {
-      deleteSpecificRow(this);
-    };
-  
-    rowControlsDiv.appendChild(addRowButton);
-    rowControlsDiv.appendChild(deleteRowButton);
-  
-    timeTd.appendChild(rowControlsDiv);
-  
-    timeTd.addEventListener('mouseenter', function() {
-      rowControlsDiv.style.display = 'flex';
-    });
-    timeTd.addEventListener('mouseleave', function() {
-      rowControlsDiv.style.display = 'none';
-    });
-  
-    let timeInput = document.createElement('input');
-    timeInput.type = 'number';
-    timeInput.value = i + 1;
-    timeTd.appendChild(timeInput);
-    newRow.appendChild(timeTd);
-  
-    for (let j = 0; j < columns; j++) {
-      let dataTd = document.createElement('td');
-      let dataInput = document.createElement('input');
-      dataInput.type = 'number';
-      dataInput.value = 0;
-      dataTd.appendChild(dataInput);
-      newRow.appendChild(dataTd);
+    const header = document.getElementById('excelHeader');
+    const body = document.getElementById('excelBody');
+    
+    header.innerHTML = '';
+    body.innerHTML = '';
+    
+    let timeTh = document.createElement('th');
+    let timeInputHeader = document.createElement('input');
+    timeInputHeader.type = 'text';
+    timeInputHeader.value = 'Time';
+    timeTh.appendChild(timeInputHeader);
+    header.appendChild(timeTh);
+    
+    for (let i = 0; i < columns; i++) {
+        let columnTh = document.createElement('th');
+        let columnControlsDiv = document.createElement('div');
+        columnControlsDiv.className = 'column-controls';
+    
+        let addButton = document.createElement('button');
+        addButton.className = 'addButton';
+        addButton.textContent = '+';
+        addButton.onclick = function () { addColumnAfter(this); };
+    
+        let deleteButton = document.createElement('button');
+        deleteButton.className = 'delButton';
+        deleteButton.textContent = '-';
+        deleteButton.onclick = function () { deleteColumn(this); };
+    
+        columnControlsDiv.appendChild(addButton);
+        columnControlsDiv.appendChild(deleteButton);
+        columnTh.appendChild(columnControlsDiv);
+    
+        let columnInput = document.createElement('input');
+        columnInput.type = 'text';
+        columnInput.value = 'Name ' + (i + 1); // Unique default names
+        columnTh.appendChild(columnInput);
+    
+        header.appendChild(columnTh);
     }
-  
-    body.appendChild(newRow);
-  }
+    
+    for (let i = 0; i < rows; i++) {
+        let newRow = document.createElement('tr');
+    
+        let timeTd = document.createElement('td');
+        timeTd.style.position = 'relative';
+    
+        let rowControlsDiv = document.createElement('div');
+        rowControlsDiv.className = 'row-controls';
+        rowControlsDiv.style.display = 'none';
+        rowControlsDiv.style.position = 'absolute';
+        rowControlsDiv.style.left = '-10px';
+        rowControlsDiv.style.top = '50%';
+        rowControlsDiv.style.transform = 'translateY(-50%)';
+        rowControlsDiv.style.flexDirection = 'column';
+    
+        let addRowButton = document.createElement('button');
+        addRowButton.className = 'addButton';
+        addRowButton.textContent = '+';
+        addRowButton.onclick = function () { addRowAfter(this); };
+    
+        let deleteRowButton = document.createElement('button');
+        deleteRowButton.className = 'delButton';
+        deleteRowButton.textContent = '-';
+        deleteRowButton.onclick = function () { deleteSpecificRow(this); };
+    
+        rowControlsDiv.appendChild(addRowButton);
+        rowControlsDiv.appendChild(deleteRowButton);
+    
+        timeTd.appendChild(rowControlsDiv);
+    
+        timeTd.addEventListener('mouseenter', function() { rowControlsDiv.style.display = 'flex'; });
+        timeTd.addEventListener('mouseleave', function() { rowControlsDiv.style.display = 'none'; });
+    
+        let timeInput = document.createElement('input');
+        timeInput.type = 'number';
+        timeInput.value = i + 1;
+        timeTd.appendChild(timeInput);
+        newRow.appendChild(timeTd);
+    
+        for (let j = 0; j < columns; j++) {
+            let dataTd = document.createElement('td');
+            let dataInput = document.createElement('input');
+            dataInput.type = 'number';
+            dataInput.value = Math.sin(i + j) * 10; // Sample data for visibility
+            dataTd.appendChild(dataInput);
+            newRow.appendChild(dataTd);
+        }
+    
+        body.appendChild(newRow);
+    }
 }
 
 function addRowAfter(button) {
@@ -363,194 +330,43 @@ function deleteColumn(button) {
 }
 
 function getTableData() {
-  const data = [];
-  document.querySelectorAll('#excelBody tr').forEach(row => {
-    const rowData = [];
-    row.querySelectorAll('input[type="number"]').forEach((input, index) => {
-      if (index > 0) { // Skip the first column (Time)
-        rowData.push(parseFloat(input.value) || 0);
-      }
+    const data = [];
+    document.querySelectorAll('#excelBody tr').forEach(row => {
+        const rowData = [];
+        row.querySelectorAll('input[type="number"]').forEach((input, index) => {
+            if (index > 0) { // Skip the first column (Time)
+                rowData.push(parseFloat(input.value) || 0);
+            }
+        });
+        data.push(rowData);
     });
-    data.push(rowData);
-  });
-  return data;
+    console.log('Table Data:', data); // Debug
+    return data;
 }
 
 function getTimeLabels() {
-  return Array.from(document.querySelectorAll('#excelBody tr td:first-child input'))
-    .map(input => parseFloat(input.value) || 0);
+    const labels = Array.from(document.querySelectorAll('#excelBody tr td:first-child input'))
+        .map(input => parseFloat(input.value) || 0);
+    console.log('Time Labels:', labels); // Debug
+    return labels;
 }
 
 function createChart() {
-  const ctx = document.getElementById('myChart').getContext('2d', { willReadFrequently: true });
-  const data = getTableData();
-  const timeLabels = getTimeLabels();
-  const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
-
-  const datasets = columnNames.map((name, i) => ({
-    label: name,
-    data: data.map((row, index) => ({ x: timeLabels[index], y: row[i] })),
-    borderColor: colors[i % colors.length],
-    tension: 0.4,
-    fill: false,
-  }));
-
-  currentChart = new Chart(ctx, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true,
-      animation: { duration: 0 },
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            generateLabels: function(chart) {
-              const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-              labels.push({
-                text: 'Details',
-                fillStyle: '#000000',
-                strokeStyle: '#000000',
-                lineWidth: 1,
-                hidden: false,
-                datasetIndex: -1
-              });
-              return labels;
-            },
-            boxWidth: 20,
-            boxHeight: 20,
-            padding: 10,
-            usePointStyle: false
-          },
-          onClick: function(e, legendItem) {
-            if (legendItem.datasetIndex === -1) {
-              const chart = this.chart;
-              chart.options.showDetails = !legendItem.hidden;
-              legendItem.hidden = !legendItem.hidden;
-              chart.update();
-            } else {
-              Chart.defaults.plugins.legend.onClick.call(this, e, legendItem);
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'bottom',
-          min: Math.min(...timeLabels),
-          max: Math.max(...timeLabels),
-          ticks: {
-            callback: function(value) {
-              if (timeLabels.includes(value)) {
-                return value;
-              }
-              return null;
-            },
-            autoSkip: false
-          }
-        },
-        y: { beginAtZero: true }
-      },
-      showDetails: false,
-      plugins: [{
-        id: 'customNames',
-        afterDatasetsDraw: function(chart) {
-          const ctx = chart.ctx;
-          if (chart.options.showDetails) {
-            ctx.save();
-            chart.data.datasets.forEach((dataset, i) => {
-              if (!dataset.hidden) {
-                const meta = chart.getDatasetMeta(i);
-                meta.data.forEach((point, index) => {
-                  const name = dataset.label;
-                  const x = point.x;
-                  const y = point.y - 10;
-                  ctx.fillStyle = dataset.borderColor;
-                  ctx.font = '12px Arial';
-                  ctx.textAlign = 'center';
-                  ctx.fillText(name, x, y);
-                });
-              }
-            });
-            ctx.restore();
-          }
-        }
-      }]
-    }
-  });
-}
-
-function updateChart() {
-    if (currentChart) currentChart.destroy();
-
-    const canvas = document.getElementById('myChart');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const data = getTableData();
-    const timeLabels = getTimeLabels();
-    const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
-    const animationSpeed = parseFloat(document.getElementById('animationSpeed').value) * 1000;
-    const xAxisName = document.getElementById('xAxisName').value || 'X-Axis';
-    const yAxisName = document.getElementById('yAxisName').value || 'Y-Axis';
-
-    if (!data.length || !timeLabels.length) {
-        alert('No data available to chart!');
-        return;
-    }
-
-    const datasets = columnNames.map((name, i) => ({
-        label: name,
-        data: [],
-        borderColor: colors[i % colors.length],
-        tension: 0.4,
-        fill: false,
-    }));
-
-    const allYValues = data.flat();
-    const yMin = Math.min(...allYValues, 0);
-    const yMaxInitial = Math.max(...allYValues);
-
+    // Simplified to just set up the chart structure
+    const ctx = document.getElementById('myChart').getContext('2d', { willReadFrequently: true });
     currentChart = new Chart(ctx, {
         type: 'line',
-        data: { datasets },
+        data: { datasets: [] },
         options: {
             responsive: true,
             animation: { duration: 0 },
             plugins: {
-                legend: { display: false }, // Remove legend since Details is now a button
+                legend: { display: false },
                 title: { display: false }
             },
             scales: {
-                x: {
-                    type: 'linear',
-                    position: 'bottom',
-                    min: Math.min(...timeLabels),
-                    max: Math.max(...timeLabels),
-                    title: {
-                        display: true,
-                        text: xAxisName,
-                        padding: 10
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            if (timeLabels.includes(value)) return value;
-                            return null;
-                        },
-                        autoSkip: false
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    min: yMin,
-                    max: yMaxInitial,
-                    title: {
-                        display: true,
-                        text: yAxisName,
-                        padding: 10
-                    }
-                }
+                x: { type: 'linear', position: 'bottom', title: { display: true, text: 'X-Axis' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Y-Axis' } }
             },
             showDetails: false,
             plugins: [{
@@ -565,7 +381,7 @@ function updateChart() {
                                 meta.data.forEach((point, index) => {
                                     const name = dataset.label;
                                     const x = point.x;
-                                    const y = point.y - 10; // Position above the line
+                                    const y = point.y - 10;
                                     ctx.fillStyle = dataset.borderColor;
                                     ctx.font = '12px Arial';
                                     ctx.textAlign = 'center';
@@ -579,6 +395,47 @@ function updateChart() {
             }]
         }
     });
+}
+
+function updateChart() {
+    if (!currentChart) {
+        createChart(); // Ensure chart exists
+    } else {
+        currentChart.destroy();
+        createChart();
+    }
+
+    const data = getTableData();
+    const timeLabels = getTimeLabels();
+    const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
+    const animationSpeed = parseFloat(document.getElementById('animationSpeed').value) * 1000 || 1000;
+    const xAxisName = document.getElementById('xAxisName').value || 'X-Axis';
+    const yAxisName = document.getElementById('yAxisName').value || 'Y-Axis';
+
+    if (!data.length || !timeLabels.length) {
+        console.error('No data or time labels available');
+        return;
+    }
+
+    const datasets = columnNames.map((name, i) => ({
+        label: name,
+        data: [],
+        borderColor: colors[i % colors.length],
+        tension: 0.4,
+        fill: false,
+    }));
+
+    currentChart.data.datasets = datasets;
+    currentChart.options.scales.x.title.text = xAxisName;
+    currentChart.options.scales.y.title.text = yAxisName;
+
+    const allYValues = data.flat();
+    const yMin = Math.min(...allYValues, 0);
+    const yMaxInitial = Math.max(...allYValues);
+    currentChart.options.scales.x.min = Math.min(...timeLabels);
+    currentChart.options.scales.x.max = Math.max(...timeLabels);
+    currentChart.options.scales.y.min = yMin;
+    currentChart.options.scales.y.max = yMaxInitial;
 
     let step = 0;
     const totalSteps = data.length - 1;
@@ -637,11 +494,12 @@ function updateChart() {
         });
         currentChart.update('none');
         if (totalSteps > 0) {
-            animateLine.startTime = null; // Reset start time
+            animateLine.startTime = null;
             requestAnimationFrame(animateLine);
         }
     }
 }
+
 function exportCSV() {
   const headers = Array.from(document.querySelectorAll('#excelHeader th input')).map(input => input.value);
   const csvContent = [headers.join(',')];
