@@ -66,7 +66,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentChart) {
                 currentChart.options.showDetails = !currentChart.options.showDetails;
                 this.classList.toggle('active', currentChart.options.showDetails);
+                console.log('Show Details:', currentChart.options.showDetails); // Debug toggle state
                 currentChart.update('none');
+            } else {
+                console.error('Chart not initialized');
             }
         });
     } else {
@@ -85,7 +88,7 @@ const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
 
 function initializeTable() {
     updateTableStructure();
-    updateChart(); // Call updateChart instead of createChart for consistency
+    updateChart(); // Use updateChart for initial render
 }
 
 function updateTableStructure() {
@@ -123,7 +126,7 @@ function updateTableStructure() {
     
         let columnInput = document.createElement('input');
         columnInput.type = 'text';
-        columnInput.value = 'Name ' + (i + 1); // Unique default names
+        columnInput.value = 'Series ' + (i + 1); // Unique default names
         columnTh.appendChild(columnInput);
     
         header.appendChild(columnTh);
@@ -172,7 +175,7 @@ function updateTableStructure() {
             let dataTd = document.createElement('td');
             let dataInput = document.createElement('input');
             dataInput.type = 'number';
-            dataInput.value = Math.sin(i + j) * 10; // Sample data for visibility
+            dataInput.value = Math.sin(i + j) * 10; // Sample data
             dataTd.appendChild(dataInput);
             newRow.appendChild(dataTd);
         }
@@ -340,19 +343,18 @@ function getTableData() {
         });
         data.push(rowData);
     });
-    console.log('Table Data:', data); // Debug
+    console.log('Table Data:', data);
     return data;
 }
 
 function getTimeLabels() {
     const labels = Array.from(document.querySelectorAll('#excelBody tr td:first-child input'))
         .map(input => parseFloat(input.value) || 0);
-    console.log('Time Labels:', labels); // Debug
+    console.log('Time Labels:', labels);
     return labels;
 }
 
 function createChart() {
-    // Simplified to just set up the chart structure
     const ctx = document.getElementById('myChart').getContext('2d', { willReadFrequently: true });
     currentChart = new Chart(ctx, {
         type: 'line',
@@ -365,19 +367,36 @@ function createChart() {
                 title: { display: false }
             },
             scales: {
-                x: { type: 'linear', position: 'bottom', title: { display: true, text: 'X-Axis' } },
-                y: { beginAtZero: true, title: { display: true, text: 'Y-Axis' } }
+                x: { 
+                    type: 'linear', 
+                    position: 'bottom', 
+                    title: { display: true, text: 'X-Axis' },
+                    ticks: {
+                        callback: function(value) {
+                            const timeLabels = getTimeLabels();
+                            if (timeLabels.includes(value)) return value;
+                            return null;
+                        },
+                        autoSkip: false
+                    }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Y-Axis' }
+                }
             },
             showDetails: false,
             plugins: [{
                 id: 'customNames',
                 afterDatasetsDraw: function(chart) {
+                    console.log('Drawing names, showDetails:', chart.options.showDetails); // Debug
                     const ctx = chart.ctx;
                     if (chart.options.showDetails) {
                         ctx.save();
                         chart.data.datasets.forEach((dataset, i) => {
-                            if (!dataset.hidden) {
+                            if (!dataset.hidden && dataset.data.length > 0) {
                                 const meta = chart.getDatasetMeta(i);
+                                console.log('Dataset:', dataset.label, 'Meta data:', meta.data); // Debug
                                 meta.data.forEach((point, index) => {
                                     const name = dataset.label;
                                     const x = point.x;
@@ -399,7 +418,7 @@ function createChart() {
 
 function updateChart() {
     if (!currentChart) {
-        createChart(); // Ensure chart exists
+        createChart();
     } else {
         currentChart.destroy();
         createChart();
@@ -499,7 +518,6 @@ function updateChart() {
         }
     }
 }
-
 function exportCSV() {
   const headers = Array.from(document.querySelectorAll('#excelHeader th input')).map(input => input.value);
   const csvContent = [headers.join(',')];
