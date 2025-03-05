@@ -97,18 +97,16 @@ const customNamesPlugin = {
             chart.data.datasets.forEach((dataset, i) => {
                 const meta = chart.getDatasetMeta(i);
                 if (meta.data && meta.data.length > 0) {
-                    meta.data.forEach((point, index) => {
-                        const name = dataset.label;
-                        const x = point.x;
-                        const y = point.y - 10;
-                        ctx.fillStyle = dataset.borderColor;
-                        ctx.font = '12px Arial';
-                        ctx.textAlign = 'center';
-                        console.log(`Drawing ${name} at (${x}, ${y})`);
-                        ctx.fillText(name, x, y);
-                    });
-                } else {
-                    console.warn(`No meta data for dataset ${dataset.label}`);
+                    // Only draw the name at the latest animated point
+                    const lastPoint = meta.data[meta.data.length - 1];
+                    const name = dataset.label;
+                    const x = lastPoint.x;
+                    const y = lastPoint.y - 10;
+                    ctx.fillStyle = dataset.borderColor;
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    console.log(`Drawing ${name} at (${x}, ${y})`);
+                    ctx.fillText(name, x, y);
                 }
             });
             ctx.restore();
@@ -181,7 +179,7 @@ function updateTableStructure() {
     
         let addRowButton = document.createElement('button');
         addRowButton.className = 'addButton';
-        addRowButton.textContent = '+';
+        addButton.textContent = '+';
         addRowButton.onclick = function () { addRowAfter(this); };
     
         let deleteRowButton = document.createElement('button');
@@ -480,6 +478,7 @@ function updateChart() {
                 while (dataset.data.length <= currentStep) {
                     dataset.data.push({ x: timeLabels[dataset.data.length], y: data[dataset.data.length][i] });
                 }
+                // Replace the next point with the interpolated value
                 dataset.data[currentStep + 1] = { x: interpolatedX, y: interpolatedY };
             });
 
@@ -492,7 +491,7 @@ function updateChart() {
                 currentChart.options.scales.y.max = previousYMax + yStep;
             }
 
-            currentChart.update();
+            currentChart.update(); // Ensure plugin runs every frame
             requestAnimationFrame(animateLine);
         } else {
             datasets.forEach((dataset, i) => {
