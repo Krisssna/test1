@@ -66,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentChart) {
                 currentChart.options.showDetails = !currentChart.options.showDetails;
                 this.classList.toggle('active', currentChart.options.showDetails);
-                console.log('Show Details:', currentChart.options.showDetails); // Debug toggle state
+                console.log('Show Details toggled to:', currentChart.options.showDetails);
                 currentChart.update('none');
             } else {
-                console.error('Chart not initialized');
+                console.error('Chart not initialized when toggling Details');
             }
         });
     } else {
@@ -88,7 +88,7 @@ const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
 
 function initializeTable() {
     updateTableStructure();
-    updateChart(); // Use updateChart for initial render
+    updateChart();
 }
 
 function updateTableStructure() {
@@ -126,7 +126,7 @@ function updateTableStructure() {
     
         let columnInput = document.createElement('input');
         columnInput.type = 'text';
-        columnInput.value = 'Series ' + (i + 1); // Unique default names
+        columnInput.value = 'Series ' + (i + 1);
         columnTh.appendChild(columnInput);
     
         header.appendChild(columnTh);
@@ -175,7 +175,7 @@ function updateTableStructure() {
             let dataTd = document.createElement('td');
             let dataInput = document.createElement('input');
             dataInput.type = 'number';
-            dataInput.value = Math.sin(i + j) * 10; // Sample data
+            dataInput.value = Math.sin(i + j) * 10;
             dataTd.appendChild(dataInput);
             newRow.appendChild(dataTd);
         }
@@ -343,14 +343,14 @@ function getTableData() {
         });
         data.push(rowData);
     });
-    console.log('Table Data:', data);
+    console.log('Table Data:', data); // Log only once per update
     return data;
 }
 
 function getTimeLabels() {
     const labels = Array.from(document.querySelectorAll('#excelBody tr td:first-child input'))
         .map(input => parseFloat(input.value) || 0);
-    console.log('Time Labels:', labels);
+    console.log('Time Labels:', labels); // Log only once per update
     return labels;
 }
 
@@ -373,7 +373,7 @@ function createChart() {
                     title: { display: true, text: 'X-Axis' },
                     ticks: {
                         callback: function(value) {
-                            const timeLabels = getTimeLabels();
+                            const timeLabels = currentChart.timeLabels || getTimeLabels();
                             if (timeLabels.includes(value)) return value;
                             return null;
                         },
@@ -389,23 +389,27 @@ function createChart() {
             plugins: [{
                 id: 'customNames',
                 afterDatasetsDraw: function(chart) {
-                    console.log('Drawing names, showDetails:', chart.options.showDetails); // Debug
                     const ctx = chart.ctx;
                     if (chart.options.showDetails) {
+                        console.log('Drawing names, showDetails:', chart.options.showDetails);
                         ctx.save();
                         chart.data.datasets.forEach((dataset, i) => {
-                            if (!dataset.hidden && dataset.data.length > 0) {
+                            if (dataset.data.length > 0) { // Ensure dataset has data
                                 const meta = chart.getDatasetMeta(i);
-                                console.log('Dataset:', dataset.label, 'Meta data:', meta.data); // Debug
-                                meta.data.forEach((point, index) => {
-                                    const name = dataset.label;
-                                    const x = point.x;
-                                    const y = point.y - 10;
-                                    ctx.fillStyle = dataset.borderColor;
-                                    ctx.font = '12px Arial';
-                                    ctx.textAlign = 'center';
-                                    ctx.fillText(name, x, y);
-                                });
+                                if (meta.data && meta.data.length > 0) {
+                                    meta.data.forEach((point, index) => {
+                                        const name = dataset.label;
+                                        const x = point.x;
+                                        const y = point.y - 10;
+                                        ctx.fillStyle = dataset.borderColor;
+                                        ctx.font = '12px Arial';
+                                        ctx.textAlign = 'center';
+                                        console.log(`Drawing ${name} at (${x}, ${y})`); // Debug each name
+                                        ctx.fillText(name, x, y);
+                                    });
+                                } else {
+                                    console.warn(`No meta data for dataset ${dataset.label}`);
+                                }
                             }
                         });
                         ctx.restore();
@@ -447,6 +451,7 @@ function updateChart() {
     currentChart.data.datasets = datasets;
     currentChart.options.scales.x.title.text = xAxisName;
     currentChart.options.scales.y.title.text = yAxisName;
+    currentChart.timeLabels = timeLabels; // Cache timeLabels for ticks callback
 
     const allYValues = data.flat();
     const yMin = Math.min(...allYValues, 0);
@@ -518,6 +523,7 @@ function updateChart() {
         }
     }
 }
+
 function exportCSV() {
   const headers = Array.from(document.querySelectorAll('#excelHeader th input')).map(input => input.value);
   const csvContent = [headers.join(',')];
