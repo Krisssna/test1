@@ -343,22 +343,32 @@ function getTableData() {
         });
         data.push(rowData);
     });
-    console.log('Table Data:', data); // Log only once per update
     return data;
 }
 
 function getTimeLabels() {
     const labels = Array.from(document.querySelectorAll('#excelBody tr td:first-child input'))
         .map(input => parseFloat(input.value) || 0);
-    console.log('Time Labels:', labels); // Log only once per update
     return labels;
 }
 
-function createChart() {
+function createChart(timeLabels, data, columnNames, xAxisName, yAxisName) {
     const ctx = document.getElementById('myChart').getContext('2d', { willReadFrequently: true });
+    const datasets = columnNames.map((name, i) => ({
+        label: name,
+        data: [],
+        borderColor: colors[i % colors.length],
+        tension: 0.4,
+        fill: false,
+    }));
+
+    const allYValues = data.flat();
+    const yMin = Math.min(...allYValues, 0);
+    const yMaxInitial = Math.max(...allYValues);
+
     currentChart = new Chart(ctx, {
         type: 'line',
-        data: { datasets: [] },
+        data: { datasets },
         options: {
             responsive: true,
             animation: { duration: 0 },
@@ -370,10 +380,11 @@ function createChart() {
                 x: { 
                     type: 'linear', 
                     position: 'bottom', 
-                    title: { display: true, text: 'X-Axis' },
+                    min: Math.min(...timeLabels),
+                    max: Math.max(...timeLabels),
+                    title: { display: true, text: xAxisName },
                     ticks: {
                         callback: function(value) {
-                            const timeLabels = currentChart.timeLabels || getTimeLabels();
                             if (timeLabels.includes(value)) return value;
                             return null;
                         },
@@ -382,7 +393,9 @@ function createChart() {
                 },
                 y: { 
                     beginAtZero: true, 
-                    title: { display: true, text: 'Y-Axis' }
+                    min: yMin,
+                    max: yMaxInitial,
+                    title: { display: true, text: yAxisName }
                 }
             },
             showDetails: false,
@@ -394,7 +407,7 @@ function createChart() {
                         console.log('Drawing names, showDetails:', chart.options.showDetails);
                         ctx.save();
                         chart.data.datasets.forEach((dataset, i) => {
-                            if (dataset.data.length > 0) { // Ensure dataset has data
+                            if (dataset.data.length > 0) {
                                 const meta = chart.getDatasetMeta(i);
                                 if (meta.data && meta.data.length > 0) {
                                     meta.data.forEach((point, index) => {
@@ -404,7 +417,7 @@ function createChart() {
                                         ctx.fillStyle = dataset.borderColor;
                                         ctx.font = '12px Arial';
                                         ctx.textAlign = 'center';
-                                        console.log(`Drawing ${name} at (${x}, ${y})`); // Debug each name
+                                        console.log(`Drawing ${name} at (${x}, ${y})`);
                                         ctx.fillText(name, x, y);
                                     });
                                 } else {
@@ -418,16 +431,10 @@ function createChart() {
             }]
         }
     });
+    return datasets; // Return datasets for animation
 }
 
 function updateChart() {
-    if (!currentChart) {
-        createChart();
-    } else {
-        currentChart.destroy();
-        createChart();
-    }
-
     const data = getTableData();
     const timeLabels = getTimeLabels();
     const columnNames = Array.from(document.querySelectorAll('#excelHeader th input')).slice(1).map(input => input.value);
@@ -440,26 +447,10 @@ function updateChart() {
         return;
     }
 
-    const datasets = columnNames.map((name, i) => ({
-        label: name,
-        data: [],
-        borderColor: colors[i % colors.length],
-        tension: 0.4,
-        fill: false,
-    }));
-
-    currentChart.data.datasets = datasets;
-    currentChart.options.scales.x.title.text = xAxisName;
-    currentChart.options.scales.y.title.text = yAxisName;
-    currentChart.timeLabels = timeLabels; // Cache timeLabels for ticks callback
-
-    const allYValues = data.flat();
-    const yMin = Math.min(...allYValues, 0);
-    const yMaxInitial = Math.max(...allYValues);
-    currentChart.options.scales.x.min = Math.min(...timeLabels);
-    currentChart.options.scales.x.max = Math.max(...timeLabels);
-    currentChart.options.scales.y.min = yMin;
-    currentChart.options.scales.y.max = yMaxInitial;
+    if (currentChart) {
+        currentChart.destroy();
+    }
+    const datasets = createChart(timeLabels, data, columnNames, xAxisName, yAxisName);
 
     let step = 0;
     const totalSteps = data.length - 1;
@@ -490,7 +481,7 @@ function updateChart() {
             });
 
             const currentYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
-            const targetYMax = Math.max(currentYMax, yMaxInitial);
+            const targetYMax = Math.max(currentYMax, currentChart.options.scales.y.max);
             if (targetYMax !== currentChart.options.scales.y.max) {
                 const previousYMax = currentChart.options.scales.y.max;
                 const yDiff = targetYMax - previousYMax;
