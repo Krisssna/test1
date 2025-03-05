@@ -1,4 +1,3 @@
-// Full-screen toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
     const fullscreenToggle = document.getElementById('fullscreenToggle');
     const chartContainer = document.getElementById('chartContainer');
@@ -67,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentChart.options.showDetails = !currentChart.options.showDetails;
                 this.classList.toggle('active', currentChart.options.showDetails);
                 console.log('Show Details toggled to:', currentChart.options.showDetails);
-                currentChart.update('none');
+                currentChart.update(); // Remove 'none' to ensure plugin runs
             } else {
                 console.error('Chart not initialized when toggling Details');
             }
@@ -407,22 +406,20 @@ function createChart(timeLabels, data, columnNames, xAxisName, yAxisName) {
                         console.log('Drawing names, showDetails:', chart.options.showDetails);
                         ctx.save();
                         chart.data.datasets.forEach((dataset, i) => {
-                            if (dataset.data.length > 0) {
-                                const meta = chart.getDatasetMeta(i);
-                                if (meta.data && meta.data.length > 0) {
-                                    meta.data.forEach((point, index) => {
-                                        const name = dataset.label;
-                                        const x = point.x;
-                                        const y = point.y - 10;
-                                        ctx.fillStyle = dataset.borderColor;
-                                        ctx.font = '12px Arial';
-                                        ctx.textAlign = 'center';
-                                        console.log(`Drawing ${name} at (${x}, ${y})`);
-                                        ctx.fillText(name, x, y);
-                                    });
-                                } else {
-                                    console.warn(`No meta data for dataset ${dataset.label}`);
-                                }
+                            const meta = chart.getDatasetMeta(i);
+                            if (meta.data && meta.data.length > 0) {
+                                meta.data.forEach((point, index) => {
+                                    const name = dataset.label;
+                                    const x = point.x;
+                                    const y = point.y - 10;
+                                    ctx.fillStyle = dataset.borderColor;
+                                    ctx.font = '12px Arial';
+                                    ctx.textAlign = 'center';
+                                    console.log(`Drawing ${name} at (${x}, ${y})`);
+                                    ctx.fillText(name, x, y);
+                                });
+                            } else {
+                                console.warn(`No meta data for dataset ${dataset.label}`);
                             }
                         });
                         ctx.restore();
@@ -431,7 +428,7 @@ function createChart(timeLabels, data, columnNames, xAxisName, yAxisName) {
             }]
         }
     });
-    return datasets; // Return datasets for animation
+    return datasets;
 }
 
 function updateChart() {
@@ -489,7 +486,7 @@ function updateChart() {
                 currentChart.options.scales.y.max = previousYMax + yStep;
             }
 
-            currentChart.update('none');
+            currentChart.update(); // Remove 'none' to ensure plugin runs
             requestAnimationFrame(animateLine);
         } else {
             datasets.forEach((dataset, i) => {
@@ -499,7 +496,7 @@ function updateChart() {
             });
             const finalYMax = Math.max(...datasets.flatMap(d => d.data.map(p => p.y)));
             currentChart.options.scales.y.max = finalYMax;
-            currentChart.update('none');
+            currentChart.update();
         }
     }
 
@@ -507,7 +504,7 @@ function updateChart() {
         datasets.forEach((dataset, i) => {
             dataset.data.push({ x: timeLabels[0], y: data[0][i] });
         });
-        currentChart.update('none');
+        currentChart.update();
         if (totalSteps > 0) {
             animateLine.startTime = null;
             requestAnimationFrame(animateLine);
